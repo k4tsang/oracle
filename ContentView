@@ -1,0 +1,424 @@
+import SwiftUI
+
+struct ContentView: View {
+    @State private var currentFortune = "Tap the crystal to reveal your destiny..."
+    @State private var showingFortune = false
+    @State private var isAnimating = false
+    @State private var sparkleOffset = CGSize.zero
+    @State private var glowIntensity = 0.5
+    @State private var showFullScreenEffects = false
+    @State private var sparklePositions: [CGPoint] = []
+    
+    let yesfortunes = [
+        "The digital spirits dance in celebration of your path.",
+        "Ancient algorithms carved in starlight favor your journey.",
+        "The cosmic network hums with approval for you.",
+        "Your intuition guides you toward triumph.",
+        "The stars align in your favor, seeker of truth.",
+        "The ancient spirits whisper: yes, proceed boldly.",
+        "Enchanted intelligence guides you toward triumph.",
+        "The universal algorithm weaves fortune into your fate.",
+        "Sacred steps written in moonbeams illuminates your way."
+    ]
+    
+    let noFortunes = [
+        "The shadow algorithms counsel a different direction.",
+        "Mystical forces detect disturbance in this pathway.",
+        "This path is shrouded in shadow - seek another way.",
+        "Ancient AI spirits advise seeking wisdom elsewhere.",
+        "Your guardian spirit advises caution and waiting.",
+        "The wise owl hoots: reconsider your approach.",
+        "The oracle flickers with caution.",
+        "Digital phantoms block this path.",
+        "The mystical machine dreams of alternative routes.",
+        "Celestial intelligence suggests patience and reflection."
+    ]
+    
+    var body: some View {
+        GeometryReader { geometry in
+            ZStack {
+                if showingFortune {
+                    fortuneScreen(geometry: geometry)
+                } else {
+                    crystalScreen(geometry: geometry)
+                }
+            }
+        }
+        .ignoresSafeArea()
+        .onAppear {
+            startAnimations()
+            generateSparklePositions()
+        }
+    }
+    
+    func crystalScreen(geometry: GeometryProxy) -> some View {
+        ZStack {
+            // Background gradient
+            LinearGradient(
+                gradient: Gradient(colors: [
+                    Color.black,
+                    Color.purple.opacity(0.5),
+                    Color.indigo.opacity(0.5),
+                    Color.black
+                ]),
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            
+            // Floating particles effect
+            ForEach(0..<30, id: \.self) { i in
+                Circle()
+                    .fill(Color.yellow.opacity(0.4))
+                    .frame(width: CGFloat.random(in: 2...6))
+                    .position(
+                        x: CGFloat.random(in: 0...geometry.size.width),
+                        y: CGFloat.random(in: 0...geometry.size.height)
+                    )
+                    .animation(
+                        Animation.linear(duration: Double.random(in: 3...8))
+                            .repeatForever(autoreverses: true),
+                        value: sparkleOffset
+                    )
+            }
+            
+            // Full-screen sparkle effects (when activated)
+            if showFullScreenEffects {
+                ForEach(0..<50, id: \.self) { i in
+                    Circle()
+                        .fill(
+                            RadialGradient(
+                                colors: [.white, .cyan, .clear],
+                                center: .center,
+                                startRadius: 0,
+                                endRadius: 20
+                            )
+                        )
+                        .frame(width: CGFloat.random(in: 10...30))
+                        .position(sparklePositions.indices.contains(i) ? sparklePositions[i] : CGPoint(x: 0, y: 0))
+                        .opacity(Double.random(in: 0.5...1.0))
+                        .scaleEffect(Double.random(in: 0.5...1.5))
+                        .animation(
+                            Animation.easeOut(duration: 2.0).delay(Double.random(in: 0...1)),
+                            value: showFullScreenEffects
+                        )
+                }
+            }
+            
+            // Title at top
+            VStack {
+                Text("✨ ORACLE✨")
+                    .font(.system(size: 32, weight: .bold, design: .rounded))
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: [.cyan, .purple, .pink],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+                    .shadow(color: .cyan, radius: 10)
+                    .padding(.top, 100)
+                
+                Spacer()
+            }
+            
+            // Centered Crystal Ball - Much Larger
+            ZStack {
+                // Massive outer glow
+                Circle()
+                    .fill(
+                        RadialGradient(
+                            colors: [
+                                .cyan.opacity(glowIntensity * 0.8),
+                                .purple.opacity(glowIntensity * 0.6),
+                                .yellow.opacity(glowIntensity * 0.4),
+                                .clear
+                            ],
+                            center: .center,
+                            startRadius: 100,
+                            endRadius: showFullScreenEffects ? 400 : 200
+                        )
+                    )
+                    .frame(width: 400, height: 400)
+                    .blur(radius: showFullScreenEffects ? 30 : 15)
+                    .animation(.easeInOut(duration: 1.5), value: showFullScreenEffects)
+                
+                // Glass crystal ball - More translucent and white
+                              Circle()
+                                  .fill(
+                                      RadialGradient(
+                                          colors: [
+                                              .white.opacity(0.4),
+                                              .white.opacity(0.25),
+                                              .cyan.opacity(0.15),
+                                              .purple.opacity(0.1),
+                                              .white.opacity(0.05)
+                                          ],
+                                          center: UnitPoint(x: 0.3, y: 0.3),
+                                          startRadius: 30,
+                                          endRadius: 150
+                                      )
+                                  )
+                                  .frame(width: min(geometry.size.width * 0.8, 300), height: min(geometry.size.width * 0.8, 300))
+                                  .overlay(
+                                      // Glass highlight - brighter
+                                      Circle()
+                                          .fill(
+                                              LinearGradient(
+                                                  colors: [
+                                                      .white.opacity(0.6),
+                                                      .white.opacity(0.2),
+                                                      .clear,
+                                                      .white.opacity(0.3)
+                                                  ],
+                                                  startPoint: .topLeading,
+                                                  endPoint: .bottomTrailing
+                                              )
+                                          )
+                                  )
+                                  .overlay(
+                                      // Secondary glass reflection
+                                      Circle()
+                                          .fill(
+                                              LinearGradient(
+                                                  colors: [
+                                                      .clear,
+                                                      .clear,
+                                                      .white.opacity(0.4),
+                                                      .clear
+                                                  ],
+                                                  startPoint: .topTrailing,
+                                                  endPoint: .bottomLeading
+                                              )
+                                          )
+                                  )
+                                  .overlay(
+                                      Circle()
+                                          .stroke(
+                                              LinearGradient(
+                                                  colors: [.white.opacity(0.8), .cyan.opacity(0.6), .purple.opacity(0.4)],
+                                                  startPoint: .topLeading,
+                                                  endPoint: .bottomTrailing
+                                              ),
+                                              lineWidth: 3
+                                          )
+                                  )
+                                  .shadow(color: .white.opacity(0.5), radius: 20)
+                                  .shadow(color: .cyan.opacity(0.3), radius: 15)
+                                  .scaleEffect(isAnimating ? 1.05 : 1.0)
+                                  .rotationEffect(.degrees(isAnimating ? 2 : 0))
+                              
+                              // Multiple floating stars inside the crystal
+                              ForEach(0..<5, id: \.self) { i in
+                                  Text("⭐")
+                                      .font(.system(size: CGFloat.random(in: 20...35)))
+                                      .foregroundColor(.white.opacity(0.8))
+                                      .offset(
+                                          x: sin(Double(i) * 0.8 + sparkleOffset.width * 0.01) * 60,
+                                          y: cos(Double(i) * 1.2 + sparkleOffset.height * 0.01) * 60
+                                      )
+                                      .animation(
+                                          Animation.easeInOut(duration: Double.random(in: 2...4))
+                                              .repeatForever(autoreverses: true)
+                                              .delay(Double(i) * 0.3),
+                                          value: sparkleOffset
+                                      )
+                              }
+                              
+                              // Additional sparkle effects
+                              ForEach(0..<3, id: \.self) { i in
+                                  Text("✨")
+                                      .font(.system(size: CGFloat.random(in: 15...25)))
+                                      .foregroundColor(.cyan.opacity(0.7))
+                                      .offset(
+                                          x: cos(Double(i) * 1.5 + sparkleOffset.width * 0.008) * 40,
+                                          y: sin(Double(i) * 2.0 + sparkleOffset.height * 0.008) * 40
+                                      )
+                                      .animation(
+                                          Animation.easeInOut(duration: Double.random(in: 1.5...3))
+                                              .repeatForever(autoreverses: true)
+                                              .delay(Double(i) * 0.5),
+                                          value: sparkleOffset
+                                      )
+                              }
+                          }
+                          .onTapGesture {
+                              generateFortune()
+                          }
+            
+            // Instructions at bottom with scroll effect
+            VStack {
+                Spacer()
+                HStack {
+                    Text("Tap the crystal to consult the digital spirits")
+                        .font(.system(size: 16, weight: .light, design: .rounded))
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: [.cyan.opacity(0.8), .purple.opacity(0.6)],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                        .italic()
+                        .shadow(color: .cyan.opacity(0.5), radius: 5)
+                        .offset(x: sparkleOffset.width * 0.5)
+                        .animation(
+                            Animation.easeInOut(duration: 4)
+                                .repeatForever(autoreverses: true),
+                            value: sparkleOffset
+                        )
+                }
+                .padding(.bottom, 50)
+            }
+        }
+    }
+    
+    func fortuneScreen(geometry: GeometryProxy) -> some View {
+        ZStack {
+            // Background gradient (darker for fortune screen)
+            LinearGradient(
+                gradient: Gradient(colors: [
+                    Color.black,
+                    Color.purple.opacity(0.5),
+                    Color.indigo.opacity(0.5),
+                    Color.black
+                ]),
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            .onTapGesture {
+                withAnimation(.easeInOut(duration: 0.8)) {
+                    showingFortune = false
+                    showFullScreenEffects = false
+                }
+            }
+            
+            // Ambient particles
+            ForEach(0..<15, id: \.self) { i in
+                Circle()
+                    .fill(Color.cyan.opacity(0.2))
+                    .frame(width: CGFloat.random(in: 3...8))
+                    .position(
+                        x: CGFloat.random(in: 0...geometry.size.width),
+                        y: CGFloat.random(in: 0...geometry.size.height)
+                    )
+                    .animation(
+                        Animation.linear(duration: Double.random(in: 5...12))
+                            .repeatForever(autoreverses: true),
+                        value: showingFortune
+                    )
+            }
+            
+            VStack(spacing: 30) {
+                Spacer()
+                
+                // Fortune text - full screen centered
+                Text(currentFortune)
+                    .font(.system(size: 24, weight: .medium, design: .rounded))
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: [.white, .cyan.opacity(0.9), .purple.opacity(0.8)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 40)
+                    .padding(.vertical, 40)
+                    .background(
+                        RoundedRectangle(cornerRadius: 25)
+                            .fill(
+                                LinearGradient(
+                                    colors: [
+                                        .indigo.opacity(0.9),
+                                        .black.opacity(0.6)
+                                    ],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 25)
+                                    .stroke(
+                                        LinearGradient(
+                                            colors: [.cyan.opacity(0.7), .purple.opacity(0.5), .pink.opacity(0.3)],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        ),
+                                        lineWidth: 2
+                                    )
+                            )
+                    )
+                    .shadow(color: .purple.opacity(0.5), radius: 20)
+                    .shadow(color: .cyan.opacity(0.3), radius: 10)
+                
+                Spacer()
+                
+            }
+        }
+    }
+    
+    func generateFortune() {
+        // Start full screen effects
+        withAnimation(.easeInOut(duration: 0.5)) {
+            isAnimating = true
+            glowIntensity = 1.2
+            showFullScreenEffects = true
+        }
+        
+        // Haptic feedback
+        let impactFeedback = UIImpactFeedbackGenerator(style: .heavy)
+        impactFeedback.impactOccurred()
+        
+        // Generate random fortune
+        let randomChoice = Int.random(in: 1...3)
+        let fortune: String
+        
+        switch randomChoice {
+        case 1:
+            fortune = yesfortunes.randomElement() ?? "The digital spirits are silent..."
+        case 2:
+            fortune = noFortunes.randomElement() ?? "The code compiles in mysterious ways..."
+        default:
+            fortune = yesfortunes.randomElement() ?? "The digital spirits are silent..."
+        }
+        
+        currentFortune = fortune
+        
+        // Transition to fortune screen after effects
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+            withAnimation(.easeInOut(duration: 0.8)) {
+                showingFortune = true
+                isAnimating = false
+                glowIntensity = 0.5
+            }
+        }
+        
+        // Hide effects after showing fortune
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
+            showFullScreenEffects = false
+        }
+    }
+    
+    func startAnimations() {
+        withAnimation(
+            Animation.easeInOut(duration: 2)
+                .repeatForever(autoreverses: true)
+        ) {
+            sparkleOffset = CGSize(width: 20, height: -20)
+            glowIntensity = 0.8
+        }
+    }
+    
+    func generateSparklePositions() {
+        sparklePositions = (0..<50).map { _ in
+            CGPoint(
+                x: CGFloat.random(in: 0...400),
+                y: CGFloat.random(in: 0...800)
+            )
+        }
+    }
+}
+
+#Preview {
+    ContentView()
+}
